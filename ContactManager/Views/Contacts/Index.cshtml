@@ -1,0 +1,153 @@
+﻿@model IEnumerable<ContactManager.Dtos.ContactDto>
+
+@{
+    ViewData["Title"] = "Contact Manager";
+}
+
+<header class="cm-header text-center my-5">
+    <div class="d-inline-flex align-items-center gap-3">
+        <i class="bi bi-person-lines-fill cm-logo-icon" aria-hidden="true"></i>
+        <h1 class="cm-title mb-0">Contact Manager</h1>
+    </div>
+
+    <p class="cm-subtitle text-muted mt-2 mb-3">
+        Your contacts, simplified.
+    </p>
+</header>
+
+<main class="container cm-main pb-5">
+
+    @* Global banner for server/AJAX errors *@
+    @await Html.PartialAsync("_GlobalError")
+
+    @* Anti-forgery token for AJAX POST/PUT/DELETE *@
+    @Html.AntiForgeryToken()
+
+    @* Search form: handles Enter + Search button via submit *@
+    <form id="searchForm"
+          class="cm-toolbar d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-2 mb-3"
+          role="search">
+
+        <div class="cm-search">
+            <i class="bi bi-search cm-search-icon"></i>
+            <input id="searchBox"
+                   name="query"
+                   class="form-control"
+                   placeholder="Search contacts..."
+                   aria-label="Search contacts" />
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+                Search
+            </button>
+
+            <button id="addNewBtn" type="button" class="btn btn-success">
+                + Add Contact
+            </button>
+        </div>
+    </form>
+
+    @* Table body is swapped by AJAX refresh() *@
+    <div class="card cm-table-card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th class="text-center pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="contactsTbody">
+                    @await Html.PartialAsync("_ContactList", Model)
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @* Reused modal for add + edit *@
+    <div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="contactModalLabel">Contact</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                @* Submit is handled in JS to create/update *@
+                <form id="contactForm" novalidate>
+                    <div class="modal-body">
+                        @* Hidden id decides create vs update *@
+                        <input type="hidden" id="contactId" />
+
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name</label>
+                            <input id="name" type="text" class="form-control" placeholder="Full name" autocomplete="name" />
+                            <div id="nameError" class="invalid-feedback"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input id="email" type="email" class="form-control" placeholder="Email address" autocomplete="email" inputmode="email" />
+                            <div id="emailError" class="invalid-feedback"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone</label>
+
+                            @* Split inputs so phone formatting is obvious *@
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="input-group">
+                                    <span class="input-group-text">(</span>
+                                    <input id="phoneA"
+                                           type="text"
+                                           class="form-control text-center"
+                                           inputmode="numeric"
+                                           autocomplete="tel-area-code"
+                                           maxlength="3"
+                                           aria-label="Area code" />
+                                    <span class="input-group-text">)</span>
+                                </div>
+
+                                <span class="fw-semibold">-</span>
+
+                                <input id="phoneB"
+                                       type="text"
+                                       class="form-control text-center"
+                                       inputmode="numeric"
+                                       autocomplete="tel-local-prefix"
+                                       maxlength="3"
+                                       aria-label="Phone prefix" />
+
+                                <span class="fw-semibold">-</span>
+
+                                <input id="phoneC"
+                                       type="text"
+                                       class="form-control text-center"
+                                       inputmode="numeric"
+                                       autocomplete="tel-local-suffix"
+                                       maxlength="4"
+                                       aria-label="Phone line number" />
+                            </div>
+
+                            @* Phone uses a single error message for all three boxes *@
+                            <div id="phoneError" class="invalid-feedback d-block"></div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button id="saveBtn" type="submit" class="btn btn-primary">Save</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <script type="module" src="~/js/contacts/index.js" asp-append-version="true"></script>
+}

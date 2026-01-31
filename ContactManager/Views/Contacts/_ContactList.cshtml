@@ -1,0 +1,55 @@
+﻿@model IEnumerable<ContactManager.Dtos.ContactDto>
+
+@{
+    // Materialize once so we don't re-enumerate Model (and null stays harmless).
+    var contacts = Model?.ToList() ?? new List<ContactManager.Dtos.ContactDto>();
+}
+
+@if (!contacts.Any())
+{
+    <!-- Empty state row (keeps the table layout consistent) -->
+    <tr>
+        <td colspan="4" class="text-center py-5 text-muted">
+            <div class="d-flex flex-column align-items-center gap-2">
+                <i class="bi bi-person-x fs-2 opacity-75"></i>
+                <span>No contacts found</span>
+                <small class="opacity-75">Try adding a new contact or adjust your search.</small>
+            </div>
+        </td>
+    </tr>
+}
+else
+{
+    foreach (var c in contacts)
+    {
+        // Normalize display values so the UI doesn't break on missing/odd data.
+        var name = string.IsNullOrWhiteSpace(c.Name) ? "Unknown" : c.Name.Trim();
+        var initial = name.Length > 0 ? name[..1].ToUpperInvariant() : "?";
+
+        <!-- data-id is used by the JS handlers (edit/delete) to know which row was clicked -->
+        <tr data-id="@c.Id">
+            <td class="ps-4">
+                <div class="d-flex align-items-center">
+                    <span class="avatar">@initial</span>
+                    <span class="ms-2 fw-semibold">@name</span>
+                </div>
+            </td>
+            <td>@c.Email</td>
+            <td>@c.Phone</td>
+            <td class="text-center pe-4">
+                <button type="button"
+                        class="btn btn-link text-primary editBtn"
+                        title="Edit"
+                        data-id="@c.Id">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button type="button"
+                        class="btn btn-link text-danger deleteBtn"
+                        title="Delete"
+                        data-id="@c.Id">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+    }
+}

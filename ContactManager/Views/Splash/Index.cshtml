@@ -1,0 +1,18 @@
+﻿@{
+    ViewData["Title"] = "Welcome";
+    Layout = "_Layout";
+}
+
+@* Quick splash: Intro the app *@
+<div id="splash" class="splash" aria-label="Welcome screen">
+    <div class="splash-card">
+        <i class="bi bi-person-lines-fill splash-icon" aria-hidden="true"></i>
+        <h1>Contact Manager</h1>
+        <p>A smarter way to manage contacts.</p>
+        <span class="visually-hidden">Loading…</span> @* gives screen readers something useful *@
+    </div>
+</div>
+
+@section Scripts {
+    <script type="module" src="~/js/splash/index.js" asp-append-version="true"></script>
+}

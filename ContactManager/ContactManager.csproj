@@ -6,4 +6,24 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Content Remove="wwwroot\ts\contacts\api.ts" />
+    <Content Remove="wwwroot\ts\contacts\index.ts" />
+    <Content Remove="wwwroot\ts\contacts\PhoneInput.ts" />
+    <Content Remove="wwwroot\ts\shared\antiforgery.ts" />
+    <Content Remove="wwwroot\ts\shared\errors.ts" />
+    <Content Remove="wwwroot\ts\shared\types.ts" />
+    <Content Remove="wwwroot\ts\splash\index.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TypeScriptCompile Include="wwwroot\ts\contacts\api.ts" />
+    <TypeScriptCompile Include="wwwroot\ts\contacts\index.ts" />
+    <TypeScriptCompile Include="wwwroot\ts\contacts\PhoneInput.ts" />
+    <TypeScriptCompile Include="wwwroot\ts\shared\antiforgery.ts" />
+    <TypeScriptCompile Include="wwwroot\ts\shared\errors.ts" />
+    <TypeScriptCompile Include="wwwroot\ts\shared\types.ts" />
+    <TypeScriptCompile Include="wwwroot\ts\splash\index.ts" />
+  </ItemGroup>
+
 </Project>
