@@ -1,60 +1,73 @@
 ﻿using ContactManager.Models;
-using ContactManager.Utilities;
 
 namespace ContactManager.Repositories
 {
     public class InMemoryContactRepository : IContactRepository
     {
         private readonly List<Contact> _contacts = new();
+        private readonly object _lock = new();
 
-        public IEnumerable<Contact> GetAll()
+        // We copy Contacts in/out so callers can't accidentally mutate our in-memory "store"
+        // by editing an object they got back from GetAll/GetById.
+        private static Contact Copy(Contact c) => new Contact
         {
-            return _contacts;
+            Id = c.Id,
+            Name = c.Name,
+            Email = c.Email,
+            Phone = c.Phone,
+            CreatedAt = c.CreatedAt,
+            UpdatedAt = c.UpdatedAt
+        };
+
+        public IReadOnlyList<Contact> GetAll()
+        {
+            lock (_lock) // Locking prevents two requests from changing the list at the same time.
+            {
+                return _contacts.Select(Copy).ToList();
+            }
         }
 
         public Contact? GetById(Guid id)
         {
-            return _contacts.FirstOrDefault(c => c.Id == id);
+            lock (_lock)
+            {
+                var c = _contacts.FirstOrDefault(x => x.Id == id);
+                return c is null ? null : Copy(c);
+            }
         }
 
-        public OperationResult Add(Contact contact)
+        public Contact Add(Contact contact)
         {
-            if (contact == null)
-                return OperationResult.Fail("Contact cannot be null.");
-
-            _contacts.Add(contact);
-            return OperationResult.Ok();
+            lock (_lock)
+            {
+                var stored = Copy(contact); // store our own copy, keep internal state isolated
+                _contacts.Add(stored);
+                return Copy(stored);        // return a copy for the same reason
+            }
         }
 
-        public OperationResult Update(Contact contact)
+        public Contact? Update(Contact contact)
         {
-            if (contact == null)
-                return OperationResult.Fail("Contact cannot be null.");
+            lock (_lock)
+            {
+                var index = _contacts.FindIndex(c => c.Id == contact.Id);
+                if (index < 0) return null; // not found
 
-            var existing = GetById(contact.Id);
-            if (existing == null)
-                return OperationResult.Fail($"Contact with Id {contact.Id} not found.");
-
-            if (!string.IsNullOrWhiteSpace(contact.Name))
-                existing.Name = contact.Name;
-            if (!string.IsNullOrWhiteSpace(contact.Email))
-                existing.Email = contact.Email;
-            if (!string.IsNullOrWhiteSpace(contact.Phone))
-                existing.Phone = contact.Phone;
-            if (contact.UpdatedAt.HasValue)
-                existing.UpdatedAt = contact.UpdatedAt;
-
-            return OperationResult.Ok();
+                _contacts[index] = Copy(contact);
+                return Copy(_contacts[index]);
+            }
         }
 
-        public OperationResult Delete(Guid id)
+        public bool Delete(Guid id)
         {
-            var contact = GetById(id);
-            if (contact == null)
-                return OperationResult.Fail($"Contact with Id {id} not found.");
+            lock (_lock)
+            {
+                var index = _contacts.FindIndex(c => c.Id == id);
+                if (index < 0) return false;
 
-            _contacts.Remove(contact);
-            return OperationResult.Ok();
+                _contacts.RemoveAt(index);
+                return true;
+            }
         }
     }
 }

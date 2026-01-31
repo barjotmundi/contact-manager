@@ -1,5 +1,5 @@
-﻿using ContactManager.Models;
-using ContactManager.Dtos;
+﻿using ContactManager.Dtos;
+using ContactManager.Models;
 using ContactManager.Repositories;
 using ContactManager.Utilities;
 using System.Text.RegularExpressions;
@@ -15,126 +15,144 @@ namespace ContactManager.Services
             _repository = repository;
         }
 
-        public IEnumerable<ContactDto> GetAll()
+        public OperationResult<List<ContactDto>> GetAll()
         {
+            // Pull all contacts from storage and map them to DTOs
             var contacts = _repository.GetAll();
-
-            return contacts.Select(c => new ContactDto
-            {
-                Id = c.Id,
-                Name = c.Name,
-                Email = c.Email,
-                Phone = c.Phone
-            });
+            var dtos = contacts.Select(ToDto).ToList();
+            return OperationResult<List<ContactDto>>.Ok(dtos);
         }
 
-        public ContactDto? GetById(Guid id)
+        public OperationResult<ContactDto> GetById(Guid id)
         {
+            // Return a clear not found result instead of letting null flow upward
             var contact = _repository.GetById(id);
-            if (contact == null)
-                return null;
+            if (contact is null)
+                return OperationResult<ContactDto>.Fail("Contact not found.");
 
-            return new ContactDto
-            {
-                Id = contact.Id,
-                Name = contact.Name,
-                Email = contact.Email,
-                Phone = contact.Phone
-            };
+            return OperationResult<ContactDto>.Ok(ToDto(contact));
         }
 
-        public OperationResult Add(ContactDto contactDto)
+        public OperationResult<ContactDto> Add(ContactDto? contactDto)
         {
-            var validation = ValidateContactDto(contactDto);
+            if (contactDto is null)
+                return OperationResult<ContactDto>.Fail("Contact payload cannot be null.");
 
+            var validation = ValidateContactDto(contactDto);
             if (!validation.Success)
-                return validation;
+                return OperationResult<ContactDto>.Fail(validation.Message ?? "Validation failed.");
+
+            // Trim inputs once so stored data is normalized
+            var name = contactDto.Name!.Trim();
+            var email = contactDto.Email!.Trim();
+            var phone = contactDto.Phone!.Trim();
 
             var contact = new Contact
             {
                 Id = Guid.NewGuid(),
-                Name = contactDto.Name!.Trim(),
-                Email = contactDto.Email!.Trim(),
-                Phone = contactDto.Phone!.Trim(),
-                CreatedAt = DateTime.UtcNow
+                Name = name,
+                Email = email,
+                Phone = phone,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = null
             };
 
-            var result = _repository.Add(contact);
-            if (!result.Success) return result;
-
-            var createdDto = new ContactDto
-            {
-                Id = contact.Id,
-                Name = contact.Name,
-                Email = contact.Email,
-                Phone = contact.Phone
-            };
-
-            return OperationResult.Ok(createdDto);
+            var created = _repository.Add(contact);
+            return OperationResult<ContactDto>.Ok(ToDto(created));
         }
 
-        public OperationResult Update(Guid id, ContactDto contactDto)
+
+        public OperationResult<ContactDto> Update(Guid id, ContactDto? contactDto)
         {
+            if (contactDto is null)
+                return OperationResult<ContactDto>.Fail("Contact payload cannot be null.");
+
             var validation = ValidateContactDto(contactDto);
             if (!validation.Success)
-                return validation;
+                return OperationResult<ContactDto>.Fail(validation.Message ?? "Validation failed.");
 
+            // Confirm the record exists before attempting to update it
             var existingContact = _repository.GetById(id);
-            if (existingContact == null)
-                return OperationResult.Fail($"Contact with Id {id} not found.");
+            if (existingContact is null)
+                return OperationResult<ContactDto>.Fail($"Contact with Id {id} not found.");
 
-            existingContact.Name = contactDto.Name!.Trim();
-            existingContact.Email = contactDto.Email!.Trim();
-            existingContact.Phone = contactDto.Phone!.Trim();
-            existingContact.UpdatedAt = DateTime.UtcNow;
+            var name = contactDto.Name!.Trim();
+            var email = contactDto.Email!.Trim();
+            var phone = contactDto.Phone!.Trim();
 
-            return _repository.Update(existingContact);
+            // Build a new Contact to store and preserve CreatedAt from the original record
+            var toStore = new Contact
+            {
+                Id = existingContact.Id,
+                Name = name,
+                Email = email,
+                Phone = phone,
+                CreatedAt = existingContact.CreatedAt,
+                UpdatedAt = DateTime.UtcNow,
+            };
+
+            // Treat a null update as a failure and return a user facing message
+            var updatedContact = _repository.Update(toStore);
+            if (updatedContact is null)
+                return OperationResult<ContactDto>.Fail("Update failed.");
+
+            return OperationResult<ContactDto>.Ok(ToDto(updatedContact));
         }
 
         public OperationResult Delete(Guid id)
         {
-            return _repository.Delete(id);
+            var deleted = _repository.Delete(id);
+            if (!deleted)
+                return OperationResult.Fail($"Contact with Id {id} not found.");
+
+            return OperationResult.Ok();
         }
 
-        public IEnumerable<ContactDto> Search(string query)
+        public OperationResult<List<ContactDto>> Search(string? query)
         {
-            var contacts = _repository.GetAll();
+            IEnumerable<Contact> contacts = _repository.GetAll();
 
             if (!string.IsNullOrWhiteSpace(query))
             {
-                query = query.ToLower();
+                // Trim once and search name or email using case insensitive contains
+                var q = query.Trim();
+
                 contacts = contacts.Where(c =>
-                    (c.Name?.ToLower().Contains(query) ?? false) ||
-                    (c.Email?.ToLower().Contains(query) ?? false));
+                    (!string.IsNullOrWhiteSpace(c.Name) && c.Name.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrWhiteSpace(c.Email) && c.Email.Contains(q, StringComparison.OrdinalIgnoreCase)));
             }
 
-            return contacts.Select(c => new ContactDto
-            {
-                Id = c.Id,
-                Name = c.Name,
-                Email = c.Email,
-                Phone = c.Phone
-            });
+            var results = contacts.Select(ToDto).ToList();
+            return OperationResult<List<ContactDto>>.Ok(results);
         }
+
+        private static ContactDto ToDto(Contact c) => new ContactDto
+        {
+            Id = c.Id,
+            Name = c.Name,
+            Email = c.Email,
+            Phone = c.Phone
+        };
 
         private OperationResult ValidateContactDto(ContactDto contactDto)
         {
-            if (contactDto == null)
-                return OperationResult.Fail("Contact payload cannot be null.");
+            var name = contactDto.Name?.Trim();
+            var email = contactDto.Email?.Trim();
+            var phone = contactDto.Phone?.Trim();
 
-            if (string.IsNullOrWhiteSpace(contactDto.Name))
+            if (string.IsNullOrWhiteSpace(name))
                 return OperationResult.Fail("Name is required.");
 
-            if (string.IsNullOrWhiteSpace(contactDto.Email))
+            if (string.IsNullOrWhiteSpace(email))
                 return OperationResult.Fail("Email is required.");
 
-            if (!IsValidEmail(contactDto.Email!))
+            if (!IsValidEmail(email))
                 return OperationResult.Fail("Email is not valid.");
 
-            if (string.IsNullOrWhiteSpace(contactDto.Phone))
+            if (string.IsNullOrWhiteSpace(phone))
                 return OperationResult.Fail("Phone number is required.");
 
-            if (!IsValidPhone(contactDto.Phone!))
+            if (!IsValidPhone(phone))
                 return OperationResult.Fail("Phone number is not valid.");
 
             return OperationResult.Ok();
@@ -142,6 +160,7 @@ namespace ContactManager.Services
 
         private bool IsValidEmail(string email)
         {
+            // Simple regex based email validation for basic formatting checks
             if (string.IsNullOrWhiteSpace(email)) return false;
 
             return Regex.IsMatch(email,
@@ -151,14 +170,12 @@ namespace ContactManager.Services
 
         private bool IsValidPhone(string phone)
         {
+            // Enforces a specific stored format
             if (string.IsNullOrWhiteSpace(phone)) return false;
-
-            var digitsOnly = Regex.Replace(phone, @"[^\d]", "");
-            if (digitsOnly.Length < 7 || digitsOnly.Length > 15)
-                return false;
-
-            return Regex.IsMatch(phone, @"^\+?[0-9\s\-\(\)]+$");
+            return Regex.IsMatch(
+                phone.Trim(),
+                @"^\(\d{3}\)-\d{3}-\d{4}$"
+            );
         }
-
     }
 }

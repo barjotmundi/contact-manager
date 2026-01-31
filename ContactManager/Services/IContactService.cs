@@ -1,16 +1,15 @@
-﻿using ContactManager.Models;
-using ContactManager.Dtos;
+﻿using ContactManager.Dtos;
 using ContactManager.Utilities;
 
 namespace ContactManager.Services
 {
     public interface IContactService
     {
-        IEnumerable<ContactDto> GetAll();
-        ContactDto? GetById(Guid id);
-        OperationResult Add(ContactDto contact);
-        OperationResult Update(Guid id, ContactDto contact);
+        OperationResult<List<ContactDto>> GetAll();
+        OperationResult<ContactDto> GetById(Guid id);
+        OperationResult<ContactDto> Add(ContactDto? contactDto);
+        OperationResult<ContactDto> Update(Guid id, ContactDto? contactDto);
         OperationResult Delete(Guid id);
-        IEnumerable<ContactDto> Search(string query);
+        OperationResult<List<ContactDto>> Search(string? query);
     }
 }

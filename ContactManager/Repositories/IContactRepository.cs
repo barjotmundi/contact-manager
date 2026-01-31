@@ -1,15 +1,13 @@
 ﻿using ContactManager.Models;
-using ContactManager.Utilities;
-
 
 namespace ContactManager.Repositories
 {
     public interface IContactRepository
     {
-        IEnumerable<Contact> GetAll();
+        IReadOnlyList<Contact> GetAll();
         Contact? GetById(Guid id);
-        OperationResult Add(Contact contact);
-        OperationResult Update(Contact contact);
-        OperationResult Delete(Guid id);
+        Contact Add(Contact contact);
+        Contact? Update(Contact contact);
+        bool Delete(Guid id);
     }
 }
