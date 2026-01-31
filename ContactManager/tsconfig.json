@@ -12,7 +12,8 @@
     "strict": true,
     "esModuleInterop": true,
     "sourceMap": true,
-    "declaration": false
+    "declaration": false,
+    "types": ["jquery"]
   },
   "include": [ "wwwroot/ts/**/*.ts" ],
   "exclude": [ "node_modules", "bin", "obj" ]
