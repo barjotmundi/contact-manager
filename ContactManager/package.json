@@ -14,5 +14,8 @@
     "@types/bootstrap": "^5.2.10",
     "@types/jquery": "^3.5.33",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "jquery": "^4.0.0"
   }
 }
