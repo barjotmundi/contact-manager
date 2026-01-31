@@ -1,84 +1,54 @@
 ﻿using ContactManager.Dtos;
 using ContactManager.Services;
-using ContactManager.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ContactManager.Controllers
 {
-    [ApiController]
     [Route("contacts")]
-    public class ContactController : ControllerBase
+    public class ContactsController : Controller
     {
         private readonly IContactService _service;
 
-        public ContactController(IContactService service)
+        public ContactsController(IContactService service)
         {
             _service = service;
         }
 
-        // GET /contacts
-        [HttpGet]
-        public ActionResult<IEnumerable<ContactDto>> GetAll()
+        // GET /contacts loads the full page view
+        [HttpGet("")]
+        public IActionResult Index()
         {
-            var contacts = _service.GetAll();
-            return Ok(contacts);
+            var result = _service.GetAll();
+
+            if (!result.Success)
+            {
+                ViewData["Error"] = result.Message;
+                return View(new List<ContactDto>());
+            }
+
+            return View(result.Data ?? new List<ContactDto>());
         }
 
-        // GET /contacts/{id}
-        [HttpGet("{id:guid}")]
-        public ActionResult<ContactDto> Get(Guid id)
+        // GET /contacts/list returns the _ContactList partial for AJAX refresh
+        [HttpGet("list")]
+        public IActionResult List()
         {
-            var contact = _service.GetById(id);
+            var result = _service.GetAll();
+            if (!result.Success)
+                return BadRequest(new { message = result.Message });
 
-            if (contact == null)
-                return NotFound();
-
-            return Ok(contact);
+            return PartialView("_ContactList", result.Data ?? new List<ContactDto>());
         }
 
-        // GET /contacts/search?q=joe
+        // GET /contacts/search?query=ann returns the _ContactList partial filtered by the query
         [HttpGet("search")]
-        public ActionResult<IEnumerable<ContactDto>> Search(string q)
+        public IActionResult Search([FromQuery] string? query)
         {
-            var results = _service.Search(q);
-            return Ok(results);
-        }
-
-        // POST /contacts
-        [HttpPost]
-        public ActionResult<ContactDto> Create([FromBody] ContactDto contactDto)
-        {
-            var result = _service.Add(contactDto);
-
+            var result = _service.Search(query);
             if (!result.Success)
-                return BadRequest(result.Message);
+                return BadRequest(new { message = result.Message });
 
-            return Ok(result.Data);
-        }
-
-        // PUT /contacts/{id}
-        [HttpPut("{id:guid}")]
-        public IActionResult Update(Guid id, [FromBody] ContactDto contactDto)
-        {
-
-            var result = _service.Update(id, contactDto);
-
-            if (!result.Success)
-                return BadRequest(result.Message);
-
-            return NoContent();
-        }
-
-        // DELETE /contacts/{id}
-        [HttpDelete("{id:guid}")]
-        public IActionResult Delete(Guid id)
-        {
-            var result = _service.Delete(id);
-
-            if (!result.Success)
-                return NotFound(result.Message);
-
-            return NoContent();
+            return PartialView("_ContactList", result.Data ?? new List<ContactDto>());
         }
     }
 }
