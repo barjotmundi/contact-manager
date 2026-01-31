@@ -41,18 +41,31 @@ Layered approach:
 
 
 
-## How to Run
+## Getting Started
 
-> Note: the front end tooling (npm, tsconfig, package.json) lives in `./ContactManager` (the project folder with `ContactManager.csproj` and `wwwroot`)
+### Prereqs
 
-### 1) Install front end dependencies
+* .NET SDK (to run `dotnet`)
+* Node.js + npm (to run `npm`)
+
+### 1) Install front-end dependencies
+
+Run this from the repo root (the folder that contains the `ContactManager` folder):
 
 ```bash
 cd ContactManager
 npm install
 ```
 
-### 2) Build TypeScript (outputs to wwwroot/js)
+If you are already in `...\contact-manager\ContactManager>`, you can skip the `cd ContactManager` line and run:
+
+```bash
+npm install
+```
+
+### 2) Build TypeScript (outputs to `wwwroot/js`)
+
+Run this from the `ContactManager` folder:
 
 ```bash
 npm run build
@@ -60,23 +73,47 @@ npm run build
 
 ### 3) Run the app
 
-From the repo root
+From the repo root:
 
 ```bash
 cd ..
 dotnet run --project ContactManager --launch-profile https
 ```
 
-If you prefer HTTP only
+If you prefer HTTP only:
 
 ```bash
 dotnet run --project ContactManager --launch-profile http
 ```
 
-### 4) Run tests
+If you are already in the `ContactManager` folder, you can run:
+
+```bash
+dotnet run --launch-profile https
+```
+
+or:
+
+```bash
+dotnet run --launch-profile http
+```
+
+### 4) Open the app
+
+After running, the terminal will print a line like:
+
+* `Now listening on: https://localhost:7243`
+  Open `https://localhost:7243/`
+
+* `Now listening on: http://localhost:5297`
+  Open `http://localhost:5297/`
+
+Use the exact URL shown in your terminal.
+
+### 5) Run tests
+
+From the repo root:
 
 ```bash
 dotnet test
-
-That’s it. If you do not want to add the launch profile lines, your version is still totally fine.
 ```
