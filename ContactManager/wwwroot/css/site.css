@@ -1,22 +1,490 @@
-html {
-  font-size: 14px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+:root {
+    /* Colors */
+    --primary: #0d6efd;
+    --secondary: #6610f2;
+    --bg-start: #0b1223;
+    --bg-end: #151d33;
+    --text: #ffffff;
+    --text-muted: rgba(255, 255, 255, 0.72);
+    --border: rgba(255, 255, 255, 0.10);
+    --border-strong: rgba(255, 255, 255, 0.16);
+    --surface: rgba(255, 255, 255, 0.06);
+    --surface-2: rgba(255, 255, 255, 0.08);
+    --radius: 0.75rem;
+    --shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    --shadow-soft: 0 10px 24px rgba(0, 0, 0, 0.22);
+    /* Type */
+    --text-xs: 0.85rem;
+    --text-sm: 0.9rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.5rem;
+    --text-2xl: 2rem;
+    /* Weights */
+    --fw-regular: 400;
+    --fw-medium: 500;
+    --fw-semibold: 600;
+    --fw-bold: 700;
+    --fw-extrabold: 800;
 }
 
 body {
-  margin-bottom: 60px;
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: var(--text-base);
+    line-height: 1.6;
+    font-weight: var(--fw-regular);
+    color: var(--text);
+    background: radial-gradient(900px 500px at 15% 10%, rgba(13, 110, 253, 0.14), transparent 55%), radial-gradient(900px 500px at 85% 10%, rgba(102, 16, 242, 0.14), transparent 55%), linear-gradient(180deg, var(--bg-start), var(--bg-end));
+}
+
+    body.splash-lock {
+        overflow: hidden;
+    }
+
+/* Bootstrap helper */
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+/* Splash */
+.splash {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    color: var(--text);
+    background: radial-gradient(900px 350px at 15% 15%, rgba(102, 16, 242, 0.25), transparent 60%), radial-gradient(900px 350px at 85% 85%, rgba(13, 110, 253, 0.20), transparent 60%), linear-gradient(180deg, #05060a 0%, #071025 100%);
+    z-index: 9999;
+    transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+    .splash.hide {
+        opacity: 0;
+        transform: scale(0.985);
+        pointer-events: none;
+    }
+
+.splash-card {
+    width: min(420px, 92vw);
+    padding: 28px 22px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(10px);
+}
+
+.splash-icon {
+    font-size: 2.6rem;
+    display: inline-block;
+    margin-bottom: 10px;
+}
+
+.splash-card h1 {
+    font-size: 2rem;
+    font-weight: var(--fw-extrabold);
+    margin: 0 0 6px;
+    letter-spacing: 0.3px;
+}
+
+.splash-card p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.splash-hint {
+    display: block;
+    margin-top: 14px;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+/* Header */
+.cm-header {
+    margin-top: 3rem;
+}
+
+.cm-title {
+    font-size: var(--text-2xl);
+    font-weight: var(--fw-extrabold);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin: 0;
+}
+
+.cm-logo-icon {
+    font-size: 2.4rem;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35));
+}
+
+.cm-subtitle {
+    font-size: var(--text-lg);
+    font-weight: var(--fw-regular);
+    line-height: 1.5;
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+/* Toolbar */
+.cm-toolbar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.75rem;
+    box-shadow: var(--shadow-soft);
+}
+
+.cm-search {
+    position: relative;
+    flex: 1;
+}
+
+.cm-search-icon {
+    position: absolute;
+    top: 50%;
+    left: 0.75rem;
+    transform: translateY(-50%);
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Inputs (Bootstrap form-control) */
+.form-control {
+    font-size: var(--text-sm);
+    font-weight: var(--fw-regular);
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+.cm-search input.form-control {
+    padding-left: 2.25rem;
+}
+
+.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.form-control:focus {
+    border-color: rgba(13, 110, 253, 0.55);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.20);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+}
+
+/* Buttons */
+.btn {
+    font-size: var(--text-sm);
+    font-weight: var(--fw-medium);
+    border-radius: var(--radius);
+    transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease, border-color 120ms ease;
+}
+
+    .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+    }
+
+    .btn:active {
+        transform: translateY(0);
+        box-shadow: none;
+    }
+
+.btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+/* If you're using btn-success for "Add New" etc, map it to secondary */
+.btn-success {
+    background-color: var(--secondary);
+    border-color: var(--secondary);
+}
+
+.btn-link {
+    border-radius: calc(var(--radius) - 0.15rem);
+}
+
+/* Card / table container */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(6px);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+/* Table */
+.table {
+    font-size: var(--text-sm);
+    color: var(--text);
+}
+
+    .table thead th {
+        font-size: var(--text-sm);
+        font-weight: var(--fw-semibold);
+        color: rgba(255, 255, 255, 0.92);
+        background: rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid var(--border-strong);
+        padding: 0.9rem 0.75rem;
+    }
+
+    .table td {
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        padding: 0.85rem 0.75rem;
+        vertical-align: middle;
+    }
+
+    .table tbody tr {
+        transition: background 120ms ease;
+    }
+
+    .table.table-hover > tbody > tr:hover > * {
+        font-weight: var(--fw-medium);
+        color: var(--text) !important;
+        background-color: rgba(255, 255, 255, 0.06);
+    }
+
+
+/* Row content */
+.contact-name {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.name {
+    font-size: var(--text-base);
+    font-weight: var(--fw-semibold);
+    line-height: 1.2;
+}
+
+.contact-meta {
+    font-size: var(--text-xs);
+    font-weight: var(--fw-regular);
+    color: var(--text-muted);
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--fw-bold);
+    color: var(--bg-end);
+    background: rgba(255, 255, 255, 0.92);
+}
+
+/* Action icon buttons (edit/delete) */
+.action-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: calc(var(--radius) - 0.15rem);
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Outline icon buttons */
+.btn-outline-dark.action-btn {
+    border-color: rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.85);
+}
+
+    .btn-outline-dark.action-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.30);
+        box-shadow: none;
+        transform: none;
+    }
+
+.btn-outline-danger.action-btn {
+    border-color: rgba(255, 99, 132, 0.35);
+    color: rgba(255, 170, 190, 0.95);
+}
+
+    .btn-outline-danger.action-btn:hover {
+        background: rgba(255, 99, 132, 0.12);
+        box-shadow: none;
+        transform: none;
+    }
+
+/* Modal */
+.modal-content {
+    background: rgba(14, 18, 34, 0.92);
+    color: var(--text);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow);
+}
+
+.modal-header {
+    background: linear-gradient(90deg, rgba(13, 110, 253, 0.95), rgba(102, 16, 242, 0.95));
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-title {
+    font-size: var(--text-lg);
+    font-weight: var(--fw-semibold);
+}
+
+.modal-body label {
+    font-size: var(--text-sm);
+    font-weight: var(--fw-medium);
+}
+
+.modal-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Modal inputs */
+.modal-content .form-control {
+    font-size: var(--text-sm);
+    font-weight: var(--fw-regular);
+}
+
+#contactModal .form-control,
+#contactModal .input-group-text {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    border-color: var(--border);
+}
+
+    #contactModal .form-control:focus {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(13, 110, 253, 0.55);
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.18);
+        caret-color: var(--text);
+    }
+
+#contactModal .input-group-text {
+    user-select: none;
+}
+
+#contactModal .input-group .form-control {
+    min-width: 0;
+}
+
+/* Phone segment sizing */
+#contactModal .phone-seg {
+    flex: 0 0 auto;
+}
+
+#contactModal .phone-seg-md {
+    width: 90px;
+}
+
+#contactModal .phone-seg-lg {
+    width: 110px;
+}
+
+#contactModal .phone-area {
+    width: 140px;
+}
+
+/* Mobile: table rows become cards */
+@media (max-width: 576px) {
+    .table thead {
+        display: none;
+    }
+
+    .table tbody tr {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+            "name actions"
+            "email email"
+            "phone phone";
+        border: 1px solid var(--border);
+        background: var(--surface);
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: var(--shadow-soft);
+        margin-bottom: 12px;
+    }
+
+        .table tbody tr > td {
+            display: block;
+            padding: 0.9rem 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            text-align: left !important;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+            .table tbody tr > td:nth-child(1) {
+                grid-area: name;
+                border-top: none;
+            }
+
+            .table tbody tr > td:nth-child(2) {
+                grid-area: email;
+            }
+
+            .table tbody tr > td:nth-child(3) {
+                grid-area: phone;
+            }
+
+            .table tbody tr > td:nth-child(4) {
+                grid-area: actions;
+                border-top: none;
+                justify-self: end;
+                align-self: center;
+                padding-left: 0;
+                display: flex;
+                gap: 0.35rem;
+            }
+
+            /* If your first cell has a wrapper, keep it neat */
+            .table tbody tr > td:nth-child(1) .contact-name {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+            }
+}
+
+/* Mobile: stack phone inputs and hide ( ) + dashes */
+@media (max-width: 576px) {
+    #contactModal .modal-body .d-flex.align-items-center.gap-2 {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 0.6rem !important;
+    }
+
+        #contactModal .modal-body .d-flex.align-items-center.gap-2 > .input-group,
+        #contactModal .modal-body .d-flex.align-items-center.gap-2 > input.form-control {
+            width: 100%;
+        }
+
+            /* Hide only the parentheses around the area code */
+            #contactModal .modal-body .d-flex.align-items-center.gap-2 > .input-group > .input-group-text {
+                display: none !important;
+            }
+
+            #contactModal .modal-body .d-flex.align-items-center.gap-2 > .input-group > #phoneA {
+                border-radius: var(--radius) !important;
+            }
+
+        /* Hide the dash separators */
+        #contactModal .modal-body .d-flex.align-items-center.gap-2 > span.fw-semibold {
+            display: none !important;
+        }
+}
+
+/* Validation */
+.invalid-feedback {
+    font-size: var(--text-xs);
+    color: rgba(255, 170, 190, 0.95);
 }

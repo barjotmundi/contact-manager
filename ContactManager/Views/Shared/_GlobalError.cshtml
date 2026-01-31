@@ -1,0 +1,22 @@
+﻿@* Global error banner (shown when something fails and we want one clear message) *@
+<div id="globalError"
+     class="alert alert-danger d-none w-100 text-start mb-3"
+     role="alert"
+     aria-live="polite">
+    <div class="d-flex align-items-start gap-3">
+
+        <div class="flex-shrink-0 pt-1">
+            <i class="bi bi-exclamation-triangle-fill fs-5" aria-hidden="true"></i>
+        </div>
+
+        <div class="flex-grow-1">
+            <div class="fw-semibold lh-sm">Error</div>
+            <div id="globalErrorMsg" class="small mt-1 lh-sm"></div>
+        </div>
+
+        <button type="button"
+                class="btn-close flex-shrink-0 mt-1"
+                aria-label="Dismiss error"
+                id="globalErrorClose"></button>
+    </div>
+</div>
