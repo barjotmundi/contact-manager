@@ -24,9 +24,30 @@ Layered approach:
 - **Repository**: in-memory data access
 
 ## Validation Rules
-- Name is required
-- Email is required and must be valid format
-- Phone is required and must match: `(###)-###-####`
+
+* Name is required
+* Email is required and must be a valid format
+* Phone is required and must match `(###)-###-####`
+
+## Assumptions
+
+* Most of the assumptions listed below were confirmed with the Alex via email before implementation.
+* Single user and single browser session at a time, no auth, no per user data separation
+* Data only needs to exist while the app is running
+* Contact fields are limited to Name, Email, Phone
+* Phone format is intentionally strict to keep stored data consistent `(###)-###-####`
+* Email validation uses a simple regex that accepts common addresses like `name@domain.com` and rejects anything outside that basic pattern
+* Search only checks name and email using a simple case insensitive substring match
+* JavaScript is required since all CRUD actions happen via AJAX
+
+## Trade offs
+
+* In memory storage means data is lost on restart and is not designed for multiple app instances
+* AJAX with partial views keeps the UI fast, but server rendered HTML and client code need to stay aligned
+* Regex validation is practical, but email validation will not cover every edge case and phone validation is strict by design
+* Registering the repository as a singleton is simple for an in memory store, but a database backed repo would typically use a scoped lifetime
+* Unit tests focus on service logic with Moq, which keeps tests quick, but they do not cover full end to end UI behavior
+
 
 ## Project Structure (example)
 - `Controllers/`
