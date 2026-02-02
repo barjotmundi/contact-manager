@@ -13,7 +13,7 @@
 		<Content Remove="wwwroot\ts\shared\antiforgery.ts" />
 		<Content Remove="wwwroot\ts\shared\errors.ts" />
 		<Content Remove="wwwroot\ts\shared\types.ts" />
-		<Content Remove="wwwroot\ts\splash\index.ts" />
+		<Content Remove="wwwroot\ts\home\index.ts" />
 	</ItemGroup>
 
 	<ItemGroup>
