@@ -10,6 +10,9 @@
     "moduleResolution": "Bundler",
 
     "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+
     "esModuleInterop": true,
     "sourceMap": true,
     "declaration": false,
