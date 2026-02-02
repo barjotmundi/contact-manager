@@ -138,6 +138,19 @@ namespace ContactManager.Tests.Services
         // -----------------------
 
         [Fact]
+        public void Add_ReturnsFailure_WhenDtoIsNull()
+        {
+            var repo = new Mock<IContactRepository>();
+            var service = new ContactService(repo.Object);
+
+            var result = service.Add(null);
+
+            Assert.False(result.Success);
+            Assert.Equal("Contact payload cannot be null.", result.Message);
+            repo.Verify(r => r.Add(It.IsAny<Contact>()), Times.Never);
+        }
+
+        [Fact]
         public void Add_RejectsBlankName_AndSkipsRepo()
         {
             var repo = new Mock<IContactRepository>();
@@ -273,6 +286,20 @@ namespace ContactManager.Tests.Services
         // -----------------------
         // Update validation + behavior
         // -----------------------
+
+        [Fact]
+        public void Update_ReturnsFailure_WhenDtoIsNull()
+        {
+            var repo = new Mock<IContactRepository>();
+            var service = new ContactService(repo.Object);
+            var id = Guid.NewGuid();
+
+            var result = service.Update(id, null);
+
+            Assert.False(result.Success);
+            Assert.Equal("Contact payload cannot be null.", result.Message);
+            repo.Verify(r => r.Update(It.IsAny<Contact>()), Times.Never);
+        }
 
         [Fact]
         public void Update_RejectsBadDto_AndSkipsRepo()
@@ -434,6 +461,30 @@ namespace ContactManager.Tests.Services
         // -----------------------
         // Search behavior
         // -----------------------
+
+        [Fact]
+        public void Search_NullQuery_ReturnsAllContacts()
+        {
+            var repo = new Mock<IContactRepository>();
+
+            var contacts = new List<Contact>
+            {
+                new Contact { Id = Guid.NewGuid(), Name = "Sandeep Mundi", Email = "sandeep.mundi@gmail.com", Phone = "(778)-555-9911" },
+                new Contact { Id = Guid.NewGuid(), Name = "Ethan Gurne", Email = "ethan.gurne@gmail.com", Phone = "(780)-555-3322" }
+            };
+
+            repo.Setup(r => r.GetAll()).Returns(contacts);
+
+            var service = new ContactService(repo.Object);
+
+            var result = service.Search(null);
+
+            Assert.True(result.Success);
+            Assert.NotNull(result.Data);
+            Assert.Equal(2, result.Data!.Count);
+
+            repo.Verify(r => r.GetAll(), Times.Once);
+        }
 
         [Fact]
         public void Search_BlankQuery_ReturnsAllContacts()
