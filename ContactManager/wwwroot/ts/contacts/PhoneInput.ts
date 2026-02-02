@@ -3,7 +3,7 @@
     private $b: JQuery<HTMLInputElement>;
     private $c: JQuery<HTMLInputElement>;
 
-    constructor(private container: HTMLElement) {
+    constructor(container: HTMLElement) {
         const $root = $(container);
 
         this.$a = $root.find<HTMLInputElement>("#phoneA");

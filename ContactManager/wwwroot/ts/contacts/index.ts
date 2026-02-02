@@ -222,7 +222,6 @@ $(document).ready(() => {
         banner.hide();
         clearForm();
         modal.show();
-        fields.name.trigger("focus");
     });
 
     $contactForm.on("submit", (e) => {
@@ -237,7 +236,7 @@ $(document).ready(() => {
 
     $modalEl.on("input", "#phoneA, #phoneB, #phoneC", () => clearFieldError("phone"));
 
-    // Double-click a row to edit (nice shortcut)
+    // Double-click a row to edit (shortcut)
     $tbody.on("dblclick", "tr[data-id]", function () {
         const id = String($(this).data("id") || "").trim();
         if (id) openForEdit(id as ContactId);
@@ -252,6 +251,14 @@ $(document).ready(() => {
     $tbody.on("click", ".deleteBtn", function () {
         const id = String($(this).data("id") || "").trim();
         if (id) removeContact(id as ContactId);
+    });
+
+    $modalEl.on("shown.bs.modal", () => fields.name.trigger("focus"));
+
+    // Remove focus from any element inside the modal when closing
+    $modalEl.on("hide.bs.modal", () => {
+      const active = document.activeElement as HTMLElement | null;
+      if (active && $modalEl[0].contains(active)) active.blur();
     });
 
     // Always reset when closing so you don't reopen with old data/errors
