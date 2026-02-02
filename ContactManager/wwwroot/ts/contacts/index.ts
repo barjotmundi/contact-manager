@@ -3,52 +3,62 @@ import type { Contact, ContactId } from "../shared/types.js";
 import { PhoneInput } from "./PhoneInput.js";
 import { createGlobalErrorBanner, extractErrorMessage } from "../shared/errors.js";
 import { configureAntiforgeryForAjax } from "../shared/antiforgery.js";
+import { createConfirm } from "../shared/confirm.js";
 
 type Field = "name" | "email" | "phone";
 type FieldErrors = Partial<Record<Field, string>>;
 
 $(document).ready(() => {
+    // =========================
+    // Setup
+    // =========================
     configureAntiforgeryForAjax();
+
     const $tbody = $("#contactsTbody");
 
-    // Search is a normal form so Enter works without extra key handlers
     const $searchForm = $("#searchForm");
     const $searchBox = $("#searchBox");
 
     const $addBtn = $("#addNewBtn");
+
     const $modalEl = $("#contactModal");
     const modal = new (window as any).bootstrap.Modal($modalEl[0], { backdrop: true, keyboard: true });
 
-    // One modal form handles both create + update
     const $contactForm = $("#contactForm");
-
     const $id = $("#contactId");
     const $save = $("#saveBtn");
 
-    // Single place to show server / network errors
     const banner = createGlobalErrorBanner();
+    const showConfirm = createConfirm();
 
     const fields = {
         name: $("#name"),
         email: $("#email"),
     } as const;
 
-    // Manages the 3-box phone input and gives back a clean formatted value
+    // Phone is a 3-box input widget
     const phone = new PhoneInput($modalEl[0] as HTMLElement);
 
     let currentQuery = "";
     let refreshToken = 0;
 
+    // =========================
+    // Helpers
+    // =========================
     function getVal($el: JQuery<HTMLElement>): string {
         return String($el.val() ?? "").trim();
     }
 
+    // =========================
+    // Form + validation helpers
+    // =========================
     function clearFieldError(field: Field): void {
         if (field === "phone") {
             $("#phoneError").text("");
             $("#phoneA, #phoneB, #phoneC").removeClass("is-invalid").attr("aria-invalid", "false");
             return;
         }
+
         const $input = fields[field];
         const $error = $("#" + field + "Error");
         $input.removeClass("is-invalid").attr("aria-invalid", "false");
@@ -61,6 +71,7 @@ $(document).ready(() => {
             $("#phoneA, #phoneB, #phoneC").addClass("is-invalid").attr("aria-invalid", "true");
             return;
         }
+
         const $input = fields[field];
         const $error = $("#" + field + "Error");
         $input.addClass("is-invalid").attr("aria-invalid", "true");
@@ -105,7 +116,7 @@ $(document).ready(() => {
 
         const name = (contact.name ?? "").trim();
         const email = (contact.email ?? "").trim();
-        const digits = phone.rawDigits; // easier than parsing "(123)-..." back into digits
+        const digits = phone.rawDigits;
 
         if (!name) errors.name = "Required";
         if (!email) errors.email = "Required";
@@ -124,6 +135,9 @@ $(document).ready(() => {
         return errors;
     }
 
+    // =========================
+    // Actions (AJAX)
+    // =========================
     async function refresh(): Promise<void> {
         const token = ++refreshToken;
         const q = currentQuery.trim();
@@ -164,11 +178,8 @@ $(document).ready(() => {
         try {
             const payload = { name: form.name, email: form.email, phone: form.phone };
 
-            if (form.id) {
-                await ContactsApi.update(form.id, payload);
-            } else {
-                await ContactsApi.create(payload);
-            }
+            if (form.id) await ContactsApi.update(form.id, payload);
+            else await ContactsApi.create(payload);
 
             modal.hide();
             await refresh();
@@ -209,6 +220,10 @@ $(document).ready(() => {
         }
     }
 
+    // =========================
+    // Wire up events
+    // =========================
+
     // Initial load
     refresh().catch(console.error);
 
@@ -229,7 +244,7 @@ $(document).ready(() => {
         save().catch(console.error);
     });
 
-    // As soon as the user types, remove the inline error for that field
+    // Clear inline errors as user types
     (["name", "email"] as Array<keyof typeof fields>).forEach((f) => {
         fields[f].on("input", () => clearFieldError(f as Field));
     });
@@ -242,7 +257,6 @@ $(document).ready(() => {
         if (id) openForEdit(id as ContactId);
     });
 
-    // Delegated handlers because tbody gets re-rendered
     $tbody.on("click", ".editBtn", function () {
         const id = String($(this).data("id") || "").trim();
         if (id) openForEdit(id as ContactId);
@@ -250,17 +264,29 @@ $(document).ready(() => {
 
     $tbody.on("click", ".deleteBtn", function () {
         const id = String($(this).data("id") || "").trim();
-        if (id) removeContact(id as ContactId);
+        if (!id) return;
+
+        const name = String($(this).data("name") || "this contact").trim();
+
+        showConfirm(
+            {
+                title: "Delete contact",
+                message: `Are you sure you want to delete ${name}?`,
+                confirmText: "Delete",
+                confirmBtnClass: "btn-danger",
+            },
+            () => removeContact(id as ContactId)
+        );
     });
 
+    // Modal focus
     $modalEl.on("shown.bs.modal", () => fields.name.trigger("focus"));
 
     // Remove focus from any element inside the modal when closing
     $modalEl.on("hide.bs.modal", () => {
-      const active = document.activeElement as HTMLElement | null;
-      if (active && $modalEl[0].contains(active)) active.blur();
+        const active = document.activeElement as HTMLElement | null;
+        if (active && $modalEl[0].contains(active)) active.blur();
     });
 
-    // Always reset when closing so you don't reopen with old data/errors
     $modalEl.on("hidden.bs.modal", () => clearForm());
 });

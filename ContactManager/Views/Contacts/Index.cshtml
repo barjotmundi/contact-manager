@@ -67,8 +67,11 @@
         </div>
     </div>
 
-    @* Reused modal for add + edit *@
+    @* Modal for add + edit *@
     @await Html.PartialAsync("_ContactModal")
+
+    @* Reused confirmations *@
+    @await Html.PartialAsync("_ConfirmModal")
 
 </main>
 

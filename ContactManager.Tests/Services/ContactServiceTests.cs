@@ -33,10 +33,28 @@ namespace ContactManager.Tests.Services
             var ethanId = Guid.NewGuid();
             var barjotId = Guid.NewGuid();
 
+            var now = DateTime.UtcNow;
+
             var contacts = new List<Contact>
             {
-                new Contact { Id = ethanId, Name = "Ethan Gurne", Email = "ethan.gurne@gmail.com", Phone = "(780)-555-1234" },
-                new Contact { Id = barjotId, Name = "Barjot Mundi", Email = "barjot.mundi@gmail.com", Phone = "(604)-555-7788" }
+                new Contact
+                {
+                    Id = ethanId,
+                    Name = "Ethan Gurne",
+                    Email = "ethan.gurne@gmail.com",
+                    Phone = "(780)-555-1234",
+                    CreatedAt = now.AddDays(-2),
+                    UpdatedAt = null
+                },
+                new Contact
+                {
+                    Id = barjotId,
+                    Name = "Barjot Mundi",
+                    Email = "barjot.mundi@gmail.com",
+                    Phone = "(604)-555-7788",
+                    CreatedAt = now.AddDays(-1),
+                    UpdatedAt = null
+                }
             };
 
             repo.Setup(r => r.GetAll()).Returns(contacts);
@@ -51,15 +69,16 @@ namespace ContactManager.Tests.Services
             var dtos = result.Data!;
             Assert.Equal(2, dtos.Count);
 
-            Assert.Equal(ethanId, dtos[0].Id);
-            Assert.Equal("Ethan Gurne", dtos[0].Name);
-            Assert.Equal("ethan.gurne@gmail.com", dtos[0].Email);
-            Assert.Equal("(780)-555-1234", dtos[0].Phone);
+            // Sorted DESC by CreatedAt (since UpdatedAt is null for both) => Barjot first
+            Assert.Equal(barjotId, dtos[0].Id);
+            Assert.Equal("Barjot Mundi", dtos[0].Name);
+            Assert.Equal("barjot.mundi@gmail.com", dtos[0].Email);
+            Assert.Equal("(604)-555-7788", dtos[0].Phone);
 
-            Assert.Equal(barjotId, dtos[1].Id);
-            Assert.Equal("Barjot Mundi", dtos[1].Name);
-            Assert.Equal("barjot.mundi@gmail.com", dtos[1].Email);
-            Assert.Equal("(604)-555-7788", dtos[1].Phone);
+            Assert.Equal(ethanId, dtos[1].Id);
+            Assert.Equal("Ethan Gurne", dtos[1].Name);
+            Assert.Equal("ethan.gurne@gmail.com", dtos[1].Email);
+            Assert.Equal("(780)-555-1234", dtos[1].Phone);
 
             repo.Verify(r => r.GetAll(), Times.Once);
         }
@@ -78,6 +97,119 @@ namespace ContactManager.Tests.Services
             Assert.True(result.Success);
             Assert.NotNull(result.Data);
             Assert.Empty(result.Data!);
+
+            repo.Verify(r => r.GetAll(), Times.Once);
+        }
+
+        [Fact]
+        public void GetAll_SortsByUpdatedAt_WhenPresent_OtherwiseCreatedAt_Descending()
+        {
+            var repo = new Mock<IContactRepository>();
+            var now = DateTime.UtcNow;
+
+            var aId = Guid.NewGuid();
+            var bId = Guid.NewGuid();
+            var cId = Guid.NewGuid();
+
+            // A: recently UPDATED => should be first
+            // B: not updated, created more recently than C => should be second
+            // C: older => should be last
+            var contacts = new List<Contact>
+            {
+                new Contact
+                {
+                    Id = cId,
+                    Name = "C",
+                    Email = "c@example.com",
+                    Phone = "(111)-111-1111",
+                    CreatedAt = now.AddDays(-10),
+                    UpdatedAt = null
+                },
+                new Contact
+                {
+                    Id = aId,
+                    Name = "A",
+                    Email = "a@example.com",
+                    Phone = "(222)-222-2222",
+                    CreatedAt = now.AddDays(-30),
+                    UpdatedAt = now.AddHours(-1)
+                },
+                new Contact
+                {
+                    Id = bId,
+                    Name = "B",
+                    Email = "b@example.com",
+                    Phone = "(333)-333-3333",
+                    CreatedAt = now.AddDays(-2),
+                    UpdatedAt = null
+                }
+            };
+
+            repo.Setup(r => r.GetAll()).Returns(contacts);
+
+            var service = new ContactService(repo.Object);
+
+            var result = service.GetAll();
+
+            Assert.True(result.Success);
+            Assert.NotNull(result.Data);
+
+            var dtos = result.Data!;
+            Assert.Equal(3, dtos.Count);
+
+            Assert.Equal(aId, dtos[0].Id); // Updated most recently
+            Assert.Equal(bId, dtos[1].Id); // Next most recent CreatedAt
+            Assert.Equal(cId, dtos[2].Id); // Oldest CreatedAt
+
+            repo.Verify(r => r.GetAll(), Times.Once);
+        }
+
+        [Fact]
+        public void GetAll_SortsDescending_EvenWhenRepositoryOrderIsDifferent()
+        {
+            var repo = new Mock<IContactRepository>();
+            var now = DateTime.UtcNow;
+
+            var newestId = Guid.NewGuid();
+            var oldestId = Guid.NewGuid();
+
+            // Put oldest first in repo list to prove service reorders it.
+            var contacts = new List<Contact>
+            {
+                new Contact
+                {
+                    Id = oldestId,
+                    Name = "Old",
+                    Email = "old@example.com",
+                    Phone = "(444)-444-4444",
+                    CreatedAt = now.AddDays(-100),
+                    UpdatedAt = null
+                },
+                new Contact
+                {
+                    Id = newestId,
+                    Name = "New",
+                    Email = "new@example.com",
+                    Phone = "(555)-555-5555",
+                    CreatedAt = now.AddDays(-3),
+                    UpdatedAt = now.AddMinutes(-5)
+                }
+            };
+
+            repo.Setup(r => r.GetAll()).Returns(contacts);
+
+            var service = new ContactService(repo.Object);
+
+            var result = service.GetAll();
+
+            Assert.True(result.Success);
+            Assert.NotNull(result.Data);
+
+            var dtos = result.Data!;
+            Assert.Equal(2, dtos.Count);
+
+            Assert.Equal(newestId, dtos[0].Id);
+            Assert.Equal(oldestId, dtos[1].Id);
 
             repo.Verify(r => r.GetAll(), Times.Once);
         }
@@ -136,6 +268,19 @@ namespace ContactManager.Tests.Services
         // -----------------------
         // Add validation + behavior
         // -----------------------
+
+        [Fact]
+        public void Add_ReturnsFailure_WhenDtoIsNull()
+        {
+            var repo = new Mock<IContactRepository>();
+            var service = new ContactService(repo.Object);
+
+            var result = service.Add(null);
+
+            Assert.False(result.Success);
+            Assert.Equal("Contact payload cannot be null.", result.Message);
+            repo.Verify(r => r.Add(It.IsAny<Contact>()), Times.Never);
+        }
 
         [Fact]
         public void Add_RejectsBlankName_AndSkipsRepo()
@@ -273,6 +418,20 @@ namespace ContactManager.Tests.Services
         // -----------------------
         // Update validation + behavior
         // -----------------------
+
+        [Fact]
+        public void Update_ReturnsFailure_WhenDtoIsNull()
+        {
+            var repo = new Mock<IContactRepository>();
+            var service = new ContactService(repo.Object);
+            var id = Guid.NewGuid();
+
+            var result = service.Update(id, null);
+
+            Assert.False(result.Success);
+            Assert.Equal("Contact payload cannot be null.", result.Message);
+            repo.Verify(r => r.Update(It.IsAny<Contact>()), Times.Never);
+        }
 
         [Fact]
         public void Update_RejectsBadDto_AndSkipsRepo()
@@ -436,14 +595,42 @@ namespace ContactManager.Tests.Services
         // -----------------------
 
         [Fact]
+        public void Search_NullQuery_ReturnsAllContacts()
+        {
+            var repo = new Mock<IContactRepository>();
+
+            var now = DateTime.UtcNow;
+
+            var contacts = new List<Contact>
+            {
+                new Contact { Id = Guid.NewGuid(), Name = "Sandeep Mundi", Email = "sandeep.mundi@gmail.com", Phone = "(778)-555-9911", CreatedAt = now.AddDays(-3), UpdatedAt = null },
+                new Contact { Id = Guid.NewGuid(), Name = "Ethan Gurne", Email = "ethan.gurne@gmail.com", Phone = "(780)-555-3322", CreatedAt = now.AddDays(-2), UpdatedAt = null }
+            };
+
+            repo.Setup(r => r.GetAll()).Returns(contacts);
+
+            var service = new ContactService(repo.Object);
+
+            var result = service.Search(null);
+
+            Assert.True(result.Success);
+            Assert.NotNull(result.Data);
+            Assert.Equal(2, result.Data!.Count);
+
+            repo.Verify(r => r.GetAll(), Times.Once);
+        }
+
+        [Fact]
         public void Search_BlankQuery_ReturnsAllContacts()
         {
             var repo = new Mock<IContactRepository>();
 
+            var now = DateTime.UtcNow;
+
             var contacts = new List<Contact>
             {
-                new Contact { Id = Guid.NewGuid(), Name = "Sandeep Mundi", Email = "sandeep.mundi@gmail.com", Phone = "(778)-555-9911" },
-                new Contact { Id = Guid.NewGuid(), Name = "Ethan Gurne", Email = "ethan.gurne@gmail.com", Phone = "(780)-555-3322" }
+                new Contact { Id = Guid.NewGuid(), Name = "Sandeep Mundi", Email = "sandeep.mundi@gmail.com", Phone = "(778)-555-9911", CreatedAt = now.AddDays(-3), UpdatedAt = null },
+                new Contact { Id = Guid.NewGuid(), Name = "Ethan Gurne", Email = "ethan.gurne@gmail.com", Phone = "(780)-555-3322", CreatedAt = now.AddDays(-2), UpdatedAt = null }
             };
 
             repo.Setup(r => r.GetAll()).Returns(contacts);
@@ -464,10 +651,12 @@ namespace ContactManager.Tests.Services
         {
             var repo = new Mock<IContactRepository>();
 
+            var now = DateTime.UtcNow;
+
             var contacts = new List<Contact>
             {
-                new Contact { Id = Guid.NewGuid(), Name = "Ethan Gurne", Email = "ethan.gurne@gmail.com", Phone = "(780)-555-1234" },
-                new Contact { Id = Guid.NewGuid(), Name = "Sandeep Mundi", Email = "sandeep.mundi@gmail.com", Phone = "(778)-555-9911" }
+                new Contact { Id = Guid.NewGuid(), Name = "Ethan Gurne", Email = "ethan.gurne@gmail.com", Phone = "(780)-555-1234", CreatedAt = now.AddDays(-2), UpdatedAt = null },
+                new Contact { Id = Guid.NewGuid(), Name = "Sandeep Mundi", Email = "sandeep.mundi@gmail.com", Phone = "(778)-555-9911", CreatedAt = now.AddDays(-3), UpdatedAt = null }
             };
 
             repo.Setup(r => r.GetAll()).Returns(contacts);
@@ -494,10 +683,12 @@ namespace ContactManager.Tests.Services
         {
             var repo = new Mock<IContactRepository>();
 
+            var now = DateTime.UtcNow;
+
             var contacts = new List<Contact>
             {
-                new Contact { Id = Guid.NewGuid(), Name = "Ethan Gurne", Email = "ethan.gurne@gmail.com", Phone = "(780)-555-1234" },
-                new Contact { Id = Guid.NewGuid(), Name = "Sandeep Mundi", Email = "sandeep.mundi@gmail.com", Phone = "(778)-555-9911" }
+                new Contact { Id = Guid.NewGuid(), Name = "Ethan Gurne", Email = "ethan.gurne@gmail.com", Phone = "(780)-555-1234", CreatedAt = now.AddDays(-2), UpdatedAt = null },
+                new Contact { Id = Guid.NewGuid(), Name = "Sandeep Mundi", Email = "sandeep.mundi@gmail.com", Phone = "(778)-555-9911", CreatedAt = now.AddDays(-3), UpdatedAt = null }
             };
 
             repo.Setup(r => r.GetAll()).Returns(contacts);
@@ -511,6 +702,102 @@ namespace ContactManager.Tests.Services
             Assert.Single(result.Data!);
             Assert.Equal("Ethan Gurne", result.Data![0].Name);
             Assert.Equal("ethan.gurne@gmail.com", result.Data![0].Email);
+
+            repo.Verify(r => r.GetAll(), Times.Once);
+        }
+
+        [Fact]
+        public void Search_SortsResults_ByUpdatedAtOrCreatedAt_Descending()
+        {
+            var repo = new Mock<IContactRepository>();
+            var now = DateTime.UtcNow;
+
+            var aId = Guid.NewGuid();
+            var bId = Guid.NewGuid();
+            var cId = Guid.NewGuid();
+
+            var contacts = new List<Contact>
+            {
+                // Match query via email; older
+                new Contact
+                {
+                    Id = cId,
+                    Name = "Charlie",
+                    Email = "charlie@gmail.com",
+                    Phone = "(111)-111-1111",
+                    CreatedAt = now.AddDays(-10),
+                    UpdatedAt = null
+                },
+                // Match query via name; newest by CreatedAt
+                new Contact
+                {
+                    Id = bId,
+                    Name = "Bravo Gmail",
+                    Email = "bravo@example.com",
+                    Phone = "(222)-222-2222",
+                    CreatedAt = now.AddDays(-1),
+                    UpdatedAt = null
+                },
+                // Match query via email; newest overall by UpdatedAt
+                new Contact
+                {
+                    Id = aId,
+                    Name = "Alpha",
+                    Email = "alpha@gmail.com",
+                    Phone = "(333)-333-3333",
+                    CreatedAt = now.AddDays(-100),
+                    UpdatedAt = now.AddMinutes(-1)
+                }
+            };
+
+            repo.Setup(r => r.GetAll()).Returns(contacts);
+
+            var service = new ContactService(repo.Object);
+
+            // Query "gmail" matches all 3 (email or name contains).
+            var result = service.Search("gmail");
+
+            Assert.True(result.Success);
+            Assert.NotNull(result.Data);
+
+            var dtos = result.Data!;
+            Assert.Equal(3, dtos.Count);
+
+            // Sorted DESC by (UpdatedAt ?? CreatedAt):
+            Assert.Equal(aId, dtos[0].Id); // UpdatedAt most recent
+            Assert.Equal(bId, dtos[1].Id); // Next most recent CreatedAt
+            Assert.Equal(cId, dtos[2].Id); // Oldest CreatedAt
+
+            repo.Verify(r => r.GetAll(), Times.Once);
+        }
+
+        [Fact]
+        public void Search_TrimsQuery_AndStillFindsMatches()
+        {
+            var repo = new Mock<IContactRepository>();
+
+            var contacts = new List<Contact>
+            {
+                new Contact
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Ethan Gurne",
+                    Email = "ethan.gurne@gmail.com",
+                    Phone = "(780)-555-1234",
+                    CreatedAt = DateTime.UtcNow.AddDays(-1)
+                }
+            };
+
+            repo.Setup(r => r.GetAll()).Returns(contacts);
+
+            var service = new ContactService(repo.Object);
+
+            var result = service.Search("   ethan.gurne   ");
+
+            Assert.True(result.Success);
+            Assert.NotNull(result.Data);
+            Assert.Single(result.Data!);
+            Assert.Equal("Ethan Gurne", result.Data![0].Name);
 
             repo.Verify(r => r.GetAll(), Times.Once);
         }

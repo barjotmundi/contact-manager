@@ -11,9 +11,10 @@
 		<Content Remove="wwwroot\ts\contacts\index.ts" />
 		<Content Remove="wwwroot\ts\contacts\PhoneInput.ts" />
 		<Content Remove="wwwroot\ts\shared\antiforgery.ts" />
+		<Content Remove="wwwroot\ts\shared\confirm.ts" />
 		<Content Remove="wwwroot\ts\shared\errors.ts" />
 		<Content Remove="wwwroot\ts\shared\types.ts" />
-		<Content Remove="wwwroot\ts\splash\index.ts" />
+		<Content Remove="wwwroot\ts\home\index.ts" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -21,13 +22,18 @@
 		<TypeScriptCompile Include="wwwroot\ts\contacts\index.ts" />
 		<TypeScriptCompile Include="wwwroot\ts\contacts\PhoneInput.ts" />
 		<TypeScriptCompile Include="wwwroot\ts\shared\antiforgery.ts" />
+		<TypeScriptCompile Include="wwwroot\ts\shared\confirm.ts" />
 		<TypeScriptCompile Include="wwwroot\ts\shared\errors.ts" />
 		<TypeScriptCompile Include="wwwroot\ts\shared\types.ts" />
-		<TypeScriptCompile Include="wwwroot\ts\splash\index.ts" />
+		<TypeScriptCompile Include="wwwroot\ts\home\index.ts" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<None Include="wwwroot\ts\**\*.ts" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="wwwroot\ts\shared\confirm.ts" />
 	</ItemGroup>
 
 </Project>

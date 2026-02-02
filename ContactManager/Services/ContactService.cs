@@ -19,7 +19,12 @@ namespace ContactManager.Services
         {
             // Pull all contacts from storage and map them to DTOs
             var contacts = _repository.GetAll();
-            var dtos = contacts.Select(ToDto).ToList();
+
+            var dtos = contacts
+                .OrderByDescending(c => c.UpdatedAt ?? c.CreatedAt)
+                .Select(ToDto)
+                .ToList();
+
             return OperationResult<List<ContactDto>>.Ok(dtos);
         }
 
@@ -122,7 +127,11 @@ namespace ContactManager.Services
                     (!string.IsNullOrWhiteSpace(c.Email) && c.Email.Contains(q, StringComparison.OrdinalIgnoreCase)));
             }
 
-            var results = contacts.Select(ToDto).ToList();
+            var results = contacts
+                .OrderByDescending(c => c.UpdatedAt ?? c.CreatedAt)
+                .Select(ToDto)
+                .ToList();
+
             return OperationResult<List<ContactDto>>.Ok(results);
         }
 

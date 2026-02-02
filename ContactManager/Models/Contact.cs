@@ -9,12 +9,11 @@ namespace ContactManager.Models
         [Required]
         public required string Name { get; set; }
 
-        [Required]
-        [EmailAddress]
+        [Required, EmailAddress]
         public required string Email { get; set; }
 
         [Required]
-        [Phone]
+        [RegularExpression(@"\(\d{3}\)-\d{3}-\d{4}", ErrorMessage = "Phone must be (123)-456-7890")]
         public required string Phone { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

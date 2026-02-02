@@ -2,7 +2,7 @@
 
 namespace ContactManager.Controllers
 {
-    public class SplashController : Controller
+    public class HomeController : Controller
     {
         public IActionResult Index() => View();
     }
