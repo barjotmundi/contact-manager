@@ -12,12 +12,12 @@ export const ContactsApi = {
     },
 
     async getById(id: ContactId): Promise<Contact> {
-        return await $.get(`/api/contacts/${encodeURIComponent(id)}`);
+        return await $.get(`/contacts/${encodeURIComponent(id)}`);
     },
 
     async create(contact: Contact): Promise<any> {
         return await $.ajax({
-            url: "/api/contacts",
+            url: "/contacts",
             type: "POST",
             contentType: "application/json",
             dataType: "json",
@@ -27,7 +27,7 @@ export const ContactsApi = {
 
     async update(id: ContactId, contact: Contact): Promise<any> {
         return await $.ajax({
-            url: `/api/contacts/${encodeURIComponent(id)}`,
+            url: `/contacts/${encodeURIComponent(id)}`,
             type: "PUT",
             contentType: "application/json",
             dataType: "json",
@@ -37,7 +37,7 @@ export const ContactsApi = {
 
     async remove(id: ContactId): Promise<any> {
         return await $.ajax({
-            url: `/api/contacts/${encodeURIComponent(id)}`,
+            url: `/contacts/${encodeURIComponent(id)}`,
             type: "DELETE"
         });
     },

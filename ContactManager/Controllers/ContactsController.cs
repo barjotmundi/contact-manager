@@ -14,7 +14,7 @@ namespace ContactManager.Controllers
             _service = service;
         }
 
-        // GET /contacts loads the full page view
+        // GET /contacts
         [HttpGet("")]
         public IActionResult Index()
         {
@@ -29,7 +29,7 @@ namespace ContactManager.Controllers
             return View(result.Data ?? new List<ContactDto>());
         }
 
-        // GET /contacts/list returns the _ContactList partial for AJAX refresh
+        // GET /contacts/list
         [HttpGet("list")]
         public IActionResult List()
         {
@@ -40,7 +40,7 @@ namespace ContactManager.Controllers
             return PartialView("_ContactList", result.Data ?? new List<ContactDto>());
         }
 
-        // GET /contacts/search?query=ann returns the _ContactList partial filtered by the query
+        // GET /contacts/search?query=ann
         [HttpGet("search")]
         public IActionResult Search([FromQuery] string? query)
         {
@@ -49,6 +49,53 @@ namespace ContactManager.Controllers
                 return BadRequest(new { message = result.Message });
 
             return PartialView("_ContactList", result.Data ?? new List<ContactDto>());
+        }
+
+        // GET /contacts/{id}
+        [HttpGet("{id:guid}")]
+        public IActionResult Get(Guid id)
+        {
+            var result = _service.GetById(id);
+            if (!result.Success || result.Data is null)
+                return NotFound(new { message = result.Message });
+
+            return Ok(result.Data);
+        }
+
+        // POST /contacts
+        [ValidateAntiForgeryToken]
+        [HttpPost("")]
+        public IActionResult Create([FromBody] ContactDto dto)
+        {
+            var result = _service.Add(dto);
+            if (!result.Success)
+                return BadRequest(new { message = result.Message });
+
+            return Ok(result.Data);
+        }
+
+        // PUT /contacts/{id}
+        [ValidateAntiForgeryToken]
+        [HttpPut("{id:guid}")]
+        public IActionResult Update(Guid id, [FromBody] ContactDto dto)
+        {
+            var result = _service.Update(id, dto);
+            if (!result.Success)
+                return BadRequest(new { message = result.Message });
+
+            return Ok(result.Data);
+        }
+
+        // DELETE /contacts/{id}
+        [ValidateAntiForgeryToken]
+        [HttpDelete("{id:guid}")]
+        public IActionResult Delete(Guid id)
+        {
+            var result = _service.Delete(id);
+            if (!result.Success)
+                return NotFound(new { message = result.Message });
+
+            return NoContent();
         }
     }
 }
