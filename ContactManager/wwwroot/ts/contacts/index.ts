@@ -3,6 +3,7 @@ import type { Contact, ContactId } from "../shared/types.js";
 import { PhoneInput } from "./PhoneInput.js";
 import { createGlobalErrorBanner, extractErrorMessage } from "../shared/errors.js";
 import { configureAntiforgeryForAjax } from "../shared/antiforgery.js";
+import { createConfirm } from "../shared/confirm.js";
 
 type Field = "name" | "email" | "phone";
 type FieldErrors = Partial<Record<Field, string>>;
@@ -18,6 +19,8 @@ $(document).ready(() => {
     const $addBtn = $("#addNewBtn");
     const $modalEl = $("#contactModal");
     const modal = new (window as any).bootstrap.Modal($modalEl[0], { backdrop: true, keyboard: true });
+
+    const showConfirm = createConfirm();
 
     // One modal form handles both create + update
     const $contactForm = $("#contactForm");
@@ -250,15 +253,28 @@ $(document).ready(() => {
 
     $tbody.on("click", ".deleteBtn", function () {
         const id = String($(this).data("id") || "").trim();
-        if (id) removeContact(id as ContactId);
+        if (!id) return;
+
+        // getting name
+        const name = String($(this).data("name") || "this contact").trim();
+
+        showConfirm(
+            {
+                title: "Delete contact",
+                message: `Are you sure you want to delete ${name}?`,
+                confirmText: "Delete",
+                confirmBtnClass: "btn-danger",
+            },
+            () => removeContact(id as ContactId)
+        );
     });
 
     $modalEl.on("shown.bs.modal", () => fields.name.trigger("focus"));
 
     // Remove focus from any element inside the modal when closing
     $modalEl.on("hide.bs.modal", () => {
-      const active = document.activeElement as HTMLElement | null;
-      if (active && $modalEl[0].contains(active)) active.blur();
+        const active = document.activeElement as HTMLElement | null;
+        if (active && $modalEl[0].contains(active)) active.blur();
     });
 
     // Always reset when closing so you don't reopen with old data/errors

@@ -16,6 +16,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "build": "^0.1.4",
     "jquery": "^4.0.0"
   }
 }
